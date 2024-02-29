@@ -1,6 +1,6 @@
 import numpy as np
 
-def log_podela(broj):
+def log_podela(broj): # radi
     '''
     Deli opseg na broj delova po logaritamskoj skali. 
     Koristimo za podelu asteroid au radijalnom pravcu kako bi celije blize povrsini
@@ -21,7 +21,7 @@ def log_podela(broj):
         
     return np.array(podela)
 
-def centri(a):
+def centri(a): # radi
     '''
     racuna koordinate centara intervala unutar nekog opsega. Ovo nam treba za
     racunanuje rastojanje izmedju susednih celija
@@ -53,9 +53,10 @@ def mapa(R, Nr, Nphi, Ntheta):
     
     output:
         celije: niz adresa svake celije u formatu [a,b,c]. a je adresa duz radijalnog pravca, b duz longitude, c duz latitude
-        npr. celija [3,3,0] je cetvrta od centra (zato sto je prva sferna celija u centru), treca po longitudi i prva po latitudi (na juznom polu) 
+        npr. celija [3,3,0] je cetvrta od centra (zato sto je prva sferna celija u centru), cetvrta po longitudi i prva po latitudi (na juznoj strani ose) 
         -----------------
-        okolina: adrese okolnih celija za svaku celiju. 
+        okolina_adrese: adrese okolnih celija za svaku celiju. 
+        okolina_indeksi: indeksi okolnih celija za svaku celiju.
     '''
 
     # Formiranje nizova celija
@@ -87,104 +88,105 @@ def mapa(R, Nr, Nphi, Ntheta):
                                  (np.sin(theta[k+1])-np.sin(theta[k])))
 
     
-    celije = np.array(celije)            
-    spoljne_celije = celije[np.transpose(celije)[0] == Nr-1] # sve one kod kojih je prva koordinata ima najveci moguci broj, tj. Nr-1. To znaci da su najdalje po radijalnom pravcu   
-    spoljne_celije_indeks=redni_broj[np.transpose(celije)[0] == Nr-1] # redni broj spoljnih celija
+    celije_num = np.array(celije)            
+    spoljne_celije_num = celije_num[np.transpose(celije_num)[0] == Nr-1] # sve one kod kojih je prva koordinata ima najveci moguci broj, tj. Nr-1. To znaci da su najdalje po radijalnom pravcu   
+    spoljne_celije_indeks=redni_broj[np.transpose(celije_num)[0] == Nr-1] # redni broj spoljnih celija
     
     
 
     # Povrsine spoljnih celija
-    S = np.zeros(len(spoljne_celije))
-    for i in range(len(spoljne_celije)):
-        S[i] = R**2*dphi*(np.sin(spoljne_celije[i][2] + 1) - 
-        np.sin(spoljne_celije[i][2]))
+    S = np.zeros(len(spoljne_celije_num))
+    for i in range(len(spoljne_celije_num)):
+        S[i] = R**2*dphi*(np.sin(spoljne_celije_num[i][2] + 1) - 
+        np.sin(spoljne_celije_num[i][2]))
         
-    '''
-    treba proveriti zapremine i povrsine, ostalo je OK
-    '''
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    # ------ Formiranje liste susednih elemenata ------- #
-    okolina = []
-    
-    for i in range(len(celije)):
-        # Izbacivanje spoljne/naredne celije u radijalnom pravcu, ukoliko je 
-        # trenutna celija zadnja u nizu/spoljna
-        if celije[i][0] == Nr-1:
-            # Celije u theta pravcu koje su u dodiru sa osom rotacije i plus su 
-            # spoljne celije nemaju 6 susednih celija vec 4
-            if celije[i][2] == 0 or celije[i][2] == Ntheta-1:
-                okolina.append([[celije[i][0]-1, celije[i][1], celije[i][2]],  
-                            [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], 
-                            [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]],
-                           [celije[i][0], celije[i][1], (celije[i][2]+1)%Ntheta]])
-            # Celije u theta pravcu koje su spoljne ali nisu u kontaktu sa osom
-            # rotacije sfere nemaju 6 susednih celija vec 5
-            else:
-                okolina.append([[celije[i][0]-1, celije[i][1], celije[i][2]],  
-                            [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], 
-                            [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]],
-                            [celije[i][0], celije[i][1], (celije[i][2]-1)%Ntheta], 
-                            [celije[i][0], celije[i][1], (celije[i][2]+1)%Ntheta]])
-        # Slucaj ukoliko celija nije poslednja u nizu u radijalnom pravcu/poseduje
-        # narednu celiju/nije spoljna
-        else:
-            # Celije u theta pravcu koje su u dodiru sa osom rotacije i nisu 
-            # spoljne celije nemaju 6 susednih celija vec 5
-            if celije[i][2] == 0 or celije[i][2] == Ntheta-1:
-                okolina.append([[celije[i][0]-1, celije[i][1], celije[i][2]], 
-                                    [celije[i][0]+1, celije[i][1], celije[i][2]], 
-                                    [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], 
-                                    [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]],
-                                    [celije[i][0], celije[i][1], (celije[i][2]-1)%Ntheta]])
-            # Celije u theta pravcu koje nisu spoljne i nisu u kontaktu sa osom
-            # rotacije sfere imaju svih 6 susdenih elemenata
-            else:
-                okolina.append([[celije[i][0]-1, celije[i][1], celije[i][2]], 
-                                    [celije[i][0]+1, celije[i][1], celije[i][2]], 
-                                    [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], 
-                                    [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]],
-                                    [celije[i][0], celije[i][1], (celije[i][2]-1)%Ntheta], 
-                                    [celije[i][0], celije[i][1], (celije[i][2]+1)%Ntheta]])   
-                
-    # ------- Formiranje centralne celije ------- #
-    # Formiranje liste okolina sa centralnom celijom
-    for i in range(len(celije)):
-        if okolina[i][0][0] == 0:
-            okolina[i][0] = [0, 0, 0]
-            
 
-            
+    # ------ Formiranje liste susednih celija------- #
+    okolina_adrese = []
+    okolina_indeksi=[]
     
-    return celije, okolina, spoljne_celije, spoljne_celije_indeks
-#    okolina1 = []
-#    for i in range(len(okolina)):
-#        for j in range(len(okolina[i])):
-#            for k in range(len(celije)):
-#                print(np.array(okolina[i][j]), "AAA") # Treba da se napravi novi niz za okolinu u kom ce clanovi niza predstvaljati redni broj celije iz niza celije a ne samo njenu adresu (poziciju)
-#                print(np.array(celije[k]))
-#                if np.array(okolina[i][j]) == np.array(celije[k]):
-#                    okolina1.append(k)
-#            
-#    # Formiranje okoline centralne celije
-#    okolina_centra = []
-#    for i in range(Nphi):
-#        for j in range(Ntheta):
-#            okolina_centra.append([1, i, j])
-#            
-#    okolina[0] = okolina_centra
+    for i in range(len(celije)):
+
+        
+        if celije[i][0] == Nr-1: # ovo su spoljne celije
+            
+            if celije[i][2] == 0: # naslanjaju se na juznu stranu ose rotacije pa imaju 4 susedne celije
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]], # prethodna u radijalnom pravcu (sledece nema jer je na povrsini)
+                            [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], # prethodna po longitudi
+                            [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]], # sledeca po longitudi
+                           [celije[i][0], celije[i][1], celije[i][2]+1]]) # sledeca po latitudi (prethodne nema jer je na juznoj strani ose)
+    
+    
+            elif celije[i][2] == Ntheta-1: # naslanjaju se na severnu stranu ose rotacije pa imaju 4 susedne celije
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]], # prethodna u radijalnom pravcu (sledece nema jer je na povrsini)
+                            [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], # prethodna po longitudi
+                            [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]], # sledeca po longitudi
+                           [celije[i][0], celije[i][1], celije[i][2]-1]]) # prethodna po latitudi (sledece nema jer je na severnoj strani ose)
+
+            else: # ne naslanjaju se na osu rotacije pa imaju 5 susednih celija
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]],  # prethodna u radijalnom pravcu (sledece nema jer je na povrsini)
+                            [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], # prethodna po longitudi
+                            [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]], # sledeca po longitudi
+                            [celije[i][0], celije[i][1], (celije[i][2]-1)], # prethodna po latitudi
+                            [celije[i][0], celije[i][1], (celije[i][2]+1)]]) # sledeca po latitudi
+
+    
+        else: # ovo su unutrasnje celije
+
+            if celije[i][2] == 0: # naslanjaju se na juznu stranu ose pa imaju 5 susednih celija
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]], # prethodna u radijalnom pravcu
+                                    [celije[i][0]+1, celije[i][1], celije[i][2]], # sledeca u radijalnom pravcu
+                                    [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], # prethodna po longitudi
+                                    [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]], # sledeca po longitudi
+                                    [celije[i][0], celije[i][1], celije[i][2]+1]]) # sledeca po latitudi (prethodne nema jer je na juznoj strani ose)
+    
+            elif celije[i][2] == Ntheta-1:
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]], # prethodna u radijalnom pravcu
+                                    [celije[i][0]+1, celije[i][1], celije[i][2]], # sledeca u radijalnom pravcu
+                                    [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], # prethodna po longitudi
+                                    [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]], # sledeca po longitudi
+                                    [celije[i][0], celije[i][1], celije[i][2]-1]]) # prethodna po latitudi (sledece nema jer je na severnoj strani ose)
+            
+            else: # unutrasnje koje nisu na osi pa imaju 6 susednih celija
+                okolina_adrese.append([[celije[i][0]-1, celije[i][1], celije[i][2]], 
+                                    [celije[i][0]+1, celije[i][1], celije[i][2]], 
+                                    [celije[i][0], (celije[i][1]-1)%Nphi, celije[i][2]], 
+                                    [celije[i][0], (celije[i][1]+1)%Nphi, celije[i][2]],
+                                    [celije[i][0], celije[i][1], celije[i][2]-1], 
+                                    [celije[i][0], celije[i][1], celije[i][2]+1]])   
+                
+    
+    # nuliranje svih koordinata centralne celije. Prethodni algoritam ce dati da 
+    #je prethodna celija od [1, 2, 3] da je prethodna po radijalnom pravcu 
+    # [0, 2, 3] a to je zapravo centralna celija [0,0,0]
+    for i in range(len(celije)):
+        if okolina_adrese[i][0][0] == 0:
+            okolina_adrese[i][0] = [0, 0, 0]
+            
+    # formiranje okoline centralne celije
+    okolina_centralne=[]
+    
+    for i in range(Nphi):
+        for j in range(Ntheta):
+            okolina_centralne.append([1, i, j])
+            
+    okolina_adrese[0]=okolina_centralne
+    
+    # formiranje niza u kojem su za svaku celiju dati indeksi okolnih celija, a ne njihove adrese po r, fi, theta
+    okolina_indeksi=[]
+    for i in range(len(okolina_adrese)):
+        trenutna_okolina=[]
+        for j in range(len(okolina_adrese[i])):
+            trenutna_okolina.append(celije.index(okolina_adrese[i][j]))
+        okolina_indeksi.append(trenutna_okolina)
+    
+    """
+    mapa je sada dobra, 
+    treba proveriti zapremine i povrsine, ostalo je OK
+    """
+    
+    return celije, okolina_adrese, spoljne_celije_num, spoljne_celije_indeks, okolina_indeksi
+
 #    
 #    
 #    # ------- Odredjivanje jedinicnih vektora
@@ -208,14 +210,14 @@ def mapa(R, Nr, Nphi, Ntheta):
 #    for i in range(1, len(celije)):
 #        pomocni_rastojanja = []
 #        pomocni_povrsi = []
-#        for j in range(len(okolina[i])):  
+#        for j in range(len(okolina_adrese[i])):  
 #            # Unutrasnje i spoljasnje po r
-#            if celije[i][1] == okolina[i][j][1] and celije[i][2] == okolina[i][j][2]: 
+#            if celije[i][1] == okolina_adrese[i][j][1] and celije[i][2] == okolina_adrese[i][j][2]: 
 #                pomocni_rastojanja.append(abs(r_centri[celije[i][0]]
-#                - r_centri[okolina[i][j][0]]))
+#                - r_centri[okolina_adrese[i][j][0]]))
 #                
 #                # Slucaj ukoliko je celija spoljna u odnosu na okolinu
-#                if celije[i][0] > okolina[i][j][0]:
+#                if celije[i][0] > okolina_adrese[i][j][0]:
 #                    pomocni_povrsi.append(r[celije[i][0]]**2*dphi*(np.sin(theta[celije[i][2] + 1]) 
 #                    - np.sin(theta[celije[i][2]])))
 #                    
@@ -224,17 +226,17 @@ def mapa(R, Nr, Nphi, Ntheta):
 #                    pomocni_povrsi.append(r[celije[i][0] + 1]**2*dphi*(np.sin(theta[celije[i][2] + 1])
 #                    - np.sin(theta[celije[i][2]])))
 #            # Levo i desno po phi
-#            elif celije[i][0] == okolina[i][j][0] and celije[i][2] == okolina[i][j][2]:
+#            elif celije[i][0] == okolina_adrese[i][j][0] and celije[i][2] == okolina_adrese[i][j][2]:
 #                pomocni_rastojanja.append(2*r_centri[celije[i][0]]*np.sin(dphi/2)
 #                *np.cos(theta_centri[celije[i][2]]))
 #                pomocni_povrsi.append((r[celije[i][0]+1]**2 - r[celije[i][0]]**2)/2*dtheta)
 #                
 #            # Gore i dole po theta
-#            elif celije[i][0] == okolina[i][j][0] and celije[i][1] == okolina[i][j][1]:
+#            elif celije[i][0] == okolina_adrese[i][j][0] and celije[i][1] == okolina_adrese[i][j][1]:
 #                pomocni_rastojanja.append(2*r_centri[celije[i][0]]*np.sin(dtheta/2))
 #                
 #                # Slucaj ako je celija iznad u odnosu na okolnu
-#                if celije[i][2] > okolina[i][j][2]: 
+#                if celije[i][2] > okolina_adrese[i][j][2]: 
 #                    pomocni_povrsi.append((r[celije[i][0]+1]**2 - 
 #                    r[celije[i][0]]**2)/2*dphi*np.cos(theta[celije[i][2]]))
 #                    
@@ -256,8 +258,10 @@ def mapa(R, Nr, Nphi, Ntheta):
 #    
 #    povrsi[0] = povrsi_centar
 #    
-#    return (celije, okolina, okolina1, povrsi, zapremine, rastojanja, normale, spoljne_celije, S)
+#    return (celije, okolina_adrese, okolina_indeksi, povrsi, zapremine, rastojanja, normale, spoljne_celije, S)
 
+
+# sta je ovo???
 def list_min(lista):
     
     d_min = 1e6

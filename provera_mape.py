@@ -1,19 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import mapa
+from funkcije import mapa
 
 
 R=1
-Nr=3
+Nr=4
 Nphi=6
 Ntheta=3
 
-celije, okolina=mapa(R, Nr, Nphi, Ntheta)
-
-
-adresa=12 # izabrana celija
+celije, okolina, spoljne_celije, spoljne_celije_indeks=mapa(R, Nr, Nphi, Ntheta)
 
 
 
-plt
