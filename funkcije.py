@@ -389,9 +389,9 @@ def mapa(R, Nr, Nphi, Ntheta):
         spoljne_celije_povrsine.append(R**2*dphi*(np.sin(theta[celije[spoljne_celije_indeksi[i]][2] + 1]) - 
         np.sin(theta[celije[spoljne_celije_indeksi[i]][2]])))
 
-
+    zapremine.insert(0, zapremina_centralne)
     return (celije, okolina_indeksi, np.array(zapremine), np.array(okolina_povrsine), np.array(okolina_rastojanja), 
-            okolina_centralne_indeksi, zapremina_centralne, okolina_centralne_povrsine, okolina_centralne_rastojanja,
+            okolina_centralne_indeksi, okolina_centralne_povrsine, okolina_centralne_rastojanja,
             spoljne_celije_indeksi, np.array(spoljne_celije_povrsine), np.array(spoljne_celije_normale))
 
                 
