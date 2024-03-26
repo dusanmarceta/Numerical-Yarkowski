@@ -4,9 +4,9 @@ from funkcije import mapa, list_min
 
 # Parametri podele asteroida
 R = 1 # poluprecnik asteroida
-Nr = 7 # podela u radijalnom pravcu
-Nphi = 24 # podela po longitudi
-Ntheta = 12 # podela po latitudi
+Nr = 4 # podela u radijalnom pravcu
+Nphi =12 # podela po longitudi
+Ntheta = 6 # podela po latitudi
 
 # Fizicki parametri
 rho = 2500  # gustina asteoida (kg/m^3_
@@ -41,8 +41,8 @@ dt = dt_critical/dt_faktor #s
 
 
 
-dt=3
-period = 600000
+dt=100
+period = 3000000
 
 
 
@@ -56,7 +56,7 @@ N = len(celije) + 1 # dodaje se fiktivna celija
 
 J = np.zeros(N) # ukupni fluks za svaku celiju (nije nas briga za svaku povrs posebno)
 
-T = np.zeros(N); # temperature svih celija
+T = np.zeros(N)+0; # temperature svih celija
 J = np.zeros(N)
 
 r_sun = np.array([1,0,0])
@@ -90,9 +90,9 @@ for i in range(len(vreme)): # po vremenu
     dTdt = J[:-1]/(rho*zapremine*cp)
     T[:-1] += dt*dTdt
     
-#    # evolucija temperature za svaku celiju
-#    for kk in range(N-1):
-#        TT[kk][i]=T[kk]
+    # evolucija temperature za svaku celiju
+    for kk in range(N-1):
+        TT[kk][i]=T[kk]
 #    
 #
 #plt.plot(vreme/3600, TT[0]-273.15, 'r', label='1. celija')

@@ -1,5 +1,151 @@
 import numpy as np
 
+'''
+constants
+'''
+G = 1.3271244e+20
+au = 149597870700.0
+
+
+'''
+Conversions
+'''
+def kepler(e, M, accuracy):
+    # =============================================================================
+    # solves Kepler equation using Newton-Raphson method
+    # for elliptic and hyperbolic orbit depanding on eccentricity
+
+    # Input:
+    # e - eccentricity
+    # M - mean anomaly (radians)
+    # accuracy - accuracy for Newton-Raphson method (for example 1e-6)
+    #
+    # Output:
+    # E [radians] - eccentric (hyperbolic) anomaly
+    # =============================================================================
+    if e > 1:  # hyperbolic orbit (GOODIN & ODELL, 1988)
+
+        L = M / e
+        g = 1 / e
+
+        q = 2 * (1 - g)
+        r = 3 * L
+        s = (np.sqrt(r ** 2 + q ** 3) + r) ** (1 / 3)
+
+        H00 = 2 * r / (s ** 2 + q + (q / s) ** 2)
+
+        #    if np.abs(np.abs(M)-1)<0.01:
+        if np.mod(np.abs(M), 0.5) < 0.01 or np.mod(np.abs(M), 0.5) > 0.49:  # numerical problem about this value
+            E = (M * np.arcsinh(L) + H00) / (M + 1 + 0.03)  # initial estimate
+        else:
+            E = (M * np.arcsinh(L) + H00) / (M + 1)  # initial estimate
+
+        delta = 1.0
+        while abs(delta) > accuracy:
+            f = M - e * np.sinh(E) + E
+            f1 = -e * np.cosh(E) + 1
+            delta = f / f1
+            E = E - delta
+
+    elif e < 1:  # elliptic orbit
+        delta = 1.0
+        E = M
+
+        while abs(delta) > accuracy:
+            f = E - e * np.sin(E) - M
+            f1 = 1 - e * np.cos(E)
+            delta = f / f1
+            E = E - delta
+
+    return E
+
+
+def ecc2true(E, e):
+    # =============================================================================
+    # converts eccentric (or hyperbolic) anomaly to true anomaly
+    # Input:
+    # E [radians] - eccentric (or hyperbolic anomaly)
+    # Output:
+    # True anomaly [radians]
+    # =============================================================================
+    if e > 1:
+        return 2 * np.arctan(np.sqrt((e + 1) / (e - 1)) * np.tanh(E / 2))
+    else:
+        return np.arctan2(np.sqrt(1 - e ** 2) * np.sin(E), np.cos(E) - e)
+    
+    
+    
+def sun_motion(a, e, M0, t):
+    """
+    calculates orbital postision of an asteroid. Convet time from periapsis to true anomaly
+    input:
+        a - semi-major axis (au)
+        e - eccentricity of the orbit
+        t - time since the periapsis (s)
+    output:
+        tru anomaly
+    """
+    
+    n=np.sqrt(G/(a*au)**3)
+    M=n*t + M0
+    
+    E = kepler(e, M, 1e-6)
+    return (a*(np.cos(E)-e), a*np.sqrt(1-e**2)*np.sin(E))
+
+def sun_position(axis_lat, axis_long, period, a, e, t, M0 = 0, rotation_0 = 0):
+    """
+    calculates postion of the Sun in the asteroid-fixed reference frame
+    Input:
+        axis_lat - latitude of the rotation axis wrt inertial frame
+        axis_long - longitude of the rotation axis wrt inertial frame
+        period - rotational period of the rotation
+        time - time from the reference epoch (when meridian of the asteroid pointed toward x-axis of the inertial reference frame)
+    output:
+        unit vector toward the Sun in asteroid-fixed reference frame
+        solar_irradiance - iradiation from the Sun
+    """
+    
+    # instantenous coordinates of the Sun in asteroid-centred inertial reference frame (xOy is orbital plane, x-axis toward pericenter)
+    x, y = sun_motion(a, e, M0, t)
+    
+    
+    # 1. we rotate about z axis for angle axis_long
+    R1 = np.array([[np.cos(axis_long), -np.sin(axis_long), 0],
+                    [np.sin(axis_long), np.cos(axis_long), 0],
+                    [0, 0, 1]]);
+    # 2. we rotate about y axis for angle (pi/2 - axis_lat)
+    y_angle = np.pi/2 - axis_lat
+    
+    R2 = np.array([[np.cos(y_angle), 0, np.sin(y_angle)],
+                    [0, 1, 0],
+                    [-np.sin(y_angle), 0, np.cos(y_angle)]]);
+    
+    # 3. we rotate about z axis for rotation angle
+    rotation_angle = 2*np.pi/period * t + rotation_0
+    R3 = np.array([[np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+                    [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+                    [0, 0, 1]]);
+    
+    # rotation from inertial to asteroid-fixed frame
+    R=np.linalg.inv(np.matmul(np.matmul(R3, R2), R1))
+    
+#    R=np.matmul(np.matmul(R1, R2), R3)
+    
+    '''
+    treba proveriti znakove
+    '''
+    [xs, ys, zs] = np.matmul(R, np.array([x, y, 0])) # coordinates of the sun in asteroid_fixed reference frame (au)
+    rs = np.sqrt(xs**2 + ys**2 + zs**2)
+    
+    ns=[xs/rs, ys/rs, zs/rs] # unit vector toward the Sun
+    solar_irradiance = 1361./rs**2 # total solar irradiance at distance rs
+    
+    return(ns, solar_irradiance)
+
+'''
+Special functions
+'''
+
 def list_min(lista):
     
     '''
@@ -60,7 +206,7 @@ def centri(a, nula=0): # radi
 def metrika(r1,r2):
     return np.sqrt((r1[0]-r2[0])**2 + (r1[1]-r2[1])**2 + (r1[2]-r2[2])**2)
 
-def mapa(R, Nr, Nphi, Ntheta):
+def mesh(R, Nr, Nphi, Ntheta):
     
     '''
     Daje mapu podele asteroida na celije, kao i karakteristike celija koje su potrebne
@@ -397,5 +543,8 @@ def mapa(R, Nr, Nphi, Ntheta):
                 
 
 
+    
+    
+    
                 
                 
